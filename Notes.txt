@@ -1,0 +1,87 @@
+Link - youtube.com/watch?v=2BcmN6TG_No
+
+Git - https://github.com/Java-Techie-jt/spring-cloud-gatway-hystrix
+
+
+>> Two microservices created i.e. Order Service and Payment Service and they will get registered inside Eureka Service registry. After registering, the two microservices can talk to each other using the service name rather than giving host and port while doing the REST API call.
+
+>> API gateway added which auto redirects requests to corresponding microservices.User need to come through API gateway in order to make requests to microservices.Based on incoming requests the API gateway redirects the request s to different microservices requested.
+
+>> Add, lombok, spring web, spring data jpa, H2 database in POM.xml.
+
+Note - Lombok dependency - No getter and setter required in entity class.
+
+>> We used JpaRepository. 
+public interface OrderRepository extends JpaRepository<Order, Integer> --> Here, Order is the model and Integer is the datatype of primary key.
+
+>> Service class is created and annotated with @Service and inject OrderRepository using @Autowire.
+Here, one method is implemented which prsist order object to database.
+
+>>OrderController controller class is created and annotated with @RestController and injected OrderService using @Autowire.
+Here, we implemented a REST endpoint which saved the order by taking Order object as argument.We created POST operation for Order object
+
+>> Similarly, go to the Payment microservice and do the same structure like Order Service. In PaymentService class, implemented a payment operation to save Payment object to database.
+
+>> In both Order and Payment services, application.yml file is incorporated to both microservice applications.
+Add below properties to .yml file
+server:
+    port: 9192(order), 9191(payment)
+spring:
+     h2:
+      console:
+          enabled:true 	
+
+>> Start both microservice applications, Order service runs on port 9192 and payment service runs on port 9191.
+
+>> Go to, Postman browser, and input http://localhost:9192/order/bookOrder and give body as set media type as JSON(application/json) and POST request
+{
+"id":103,
+"name":"Mobile",
+"qty":1,
+"price":8000
+}	
+Now, click on send and can see the response 
+{
+"id":103,
+"name":"Mobile",
+"qty":1,
+"price":8000
+}	
+
+>> Go to chrome browser, http://localhost:9192/h2-console/ and click connect.Now, click on the ORDER_TB, Run and we can see the record which is persisted.
+
+>> Similarly, verify the Payment API. 
+JSON payment status
+{
+"paymentStatus":"success"
+}
+
+Note - While integrating both Payment Service and Order Service the JSON payment status no need to give because this payment depends on your order.For testing we are giving this input whether record is getting inserted or not.
+
+While, you request http://localhost:9191/payment/doPayment
+it will give below response as 200 ok
+{
+"paymentId":1,
+"paymentStatus":"success",
+"transactionId":"563663v-jfk87-7876-nnkmdjjdk56"
+Here, the transactionId is auto generated using UUID implemented in payment service class.
+
+>> Go to chrome browser, http://localhost:9191/h2-console/ and click connect.Now, click on the PAYMENT_TB, Run and we can see the record which is persisted.
+
+Note- Both the APIs are working as expected.
+
+>> Now, how would we know the payment is specific to this order.In this case, When user will try to book the order and if this order is marked for checkout then simply do a REST call to Payment API and pass the order id.In this way, while save the order same time will do the REST API call to this Payment API i.e./doPayment. And, Payment object will be saved to database that time will mapped the order id.
+
+>> In order to achieve this, added OrderId and amount fields to Payment entity class which will get from the Order entity while do the REST API call to this Payment.
+
+>> In the PaymentService class,implemented a random method to set the payment status.While, the API call should be 3rd party payment gateway i.e.paypal,ptm etc. In addition to this, in doPayment() method set payment status.
+
+>>  Go to OrderService where we need to add the Payment object.For this, create Payment class in common package and create one more class TransactionRequest and added order and payment objects.And, TransactionResponse class is created with order, amount, transactionId objects.
+
+>> Now, in orderController class, instead of order object pass TransactionRequest object.Now, from this request order and payment objects are fetched.
+
+
+Link - https://www.youtube.com/watch?v=t13u6z2N9vE(Creation of Eukera Server and registered two microservices)
+
+Git - https://github.com/Java-Techie-jt/spring-cloud-gatway-hystrix
+
